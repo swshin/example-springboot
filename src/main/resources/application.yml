@@ -1,0 +1,9 @@
+server:
+  servlet:
+    context-path: /api
+  # add message in error response 
+  error:
+    include-message: always
+
+logging:
+  config: classpath:logback-spring.xml
