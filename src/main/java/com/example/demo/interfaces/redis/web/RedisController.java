@@ -2,14 +2,12 @@ package com.example.demo.interfaces.redis.web;
 
 import java.io.IOException;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.ListOperations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -29,9 +27,6 @@ public class RedisController {
 
 	@Autowired
 	private RedisService redisService;
-
-	@Resource(name="redisTemplate")
-	private ListOperations<String, String> listOps;
 	
 	@GetMapping(value = "/refresh-tokens/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public String read(@PathVariable String userId, 
@@ -99,15 +94,15 @@ public class RedisController {
 		return data.toString();
 	}
 	
-	private String getKey(String userId) {
-		return redisService.generateTokenKey("user", userId, "refresh-token");
-//		return redisService.generateTokenKey("user", userId, "socash-access-token");
-//		return redisService.generateTokenKey("user", userId, "socash-elevated-access-token");
-	}
-	
 	@ExceptionHandler(value = DemoException.class) 
 	private void handleDemoException(HttpServletResponse response, DemoException exception) throws IOException {
 		logger.error("RedisController. exception.message={}", exception.getLocalizedMessage(), exception);
 		response.sendError(exception.getHttpStatus().value(), exception.getMessage());
+	}
+
+	// This method is for testing
+	private String getKey(String userId) {
+		return redisService.generateTokenKey("user", userId, "refresh-token");
+//		return redisService.generateTokenKey("user", userId, "access-token");
 	}
 }
