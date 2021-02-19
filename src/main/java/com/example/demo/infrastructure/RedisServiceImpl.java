@@ -39,7 +39,7 @@ public class RedisServiceImpl implements RedisService {
 	}
 
 	@Override
-	public String generateTokenKey(String object, String id, String property) {
+	public String generateKey(String object, String id, String property) {
 		return String.format("%s:%s:%s", object, id, property);
 	}
 }
