@@ -34,7 +34,7 @@ public class RedisController {
 	private RedisService redisService;
 	
 	@GetMapping(value = "/refresh-tokens/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-	public EntityModel<ResultModel> readHateoas(@PathVariable String id) throws DemoException {
+	public EntityModel<ResultModel> read(@PathVariable String id) throws DemoException {
 		
 		logger.info("userId={}", id);
 
@@ -47,12 +47,12 @@ public class RedisController {
 
 		logger.info("key={}, value={}", key, value);
 
-		ResultModel data = new ResultModel(id, key, value);
+		ResultModel resultModel = new ResultModel(id, key, value);
 		
-		logger.info("data={}", data);
+		logger.info("resultModel={}", resultModel);
 
-		return EntityModel.of(data, 
-				WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(RedisController.class).readHateoas(id)).withSelfRel(),
+		return EntityModel.of(resultModel, 
+				WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(RedisController.class).read(id)).withSelfRel(),
 				WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(RedisController.class).delete(id)).withRel("delete"));
 	}
 
@@ -76,13 +76,13 @@ public class RedisController {
 
 		redisService.set(key, value);
 		
-		ResultModel data = new ResultModel(userId, key, value);
+		ResultModel resultModel = new ResultModel(userId, key, value);
 		
-		logger.info("data={}", data);
+		logger.info("resultModel={}", resultModel);
 
-		return EntityModel.of(data, 
+		return EntityModel.of(resultModel, 
 				WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(RedisController.class).save(body)).withSelfRel(),
-				WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(RedisController.class).readHateoas(userId)).withRel("read"));
+				WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(RedisController.class).read(userId)).withRel("read"));
 	}
 
 	@DeleteMapping(value = "/refresh-tokens/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -93,11 +93,11 @@ public class RedisController {
 			throw new DemoException(HttpStatus.NOT_FOUND, "The key does not exist.");
 		}
 
-		ResultModel data = new ResultModel(id, key, null);
+		ResultModel resultModel = new ResultModel(id, key, null);
 
-		logger.info("data={}", data);
+		logger.info("resultModel={}", resultModel);
 
-		return EntityModel.of(data, 
+		return EntityModel.of(resultModel, 
 				WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(RedisController.class).delete(id)).withSelfRel());
 	}
 
