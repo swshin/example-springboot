@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -53,11 +54,49 @@ public class RedisController {
 
 		return EntityModel.of(resultModel, 
 				WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(RedisController.class).read(id)).withSelfRel(),
+				WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(RedisController.class).update(null)).withRel("update"),
 				WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(RedisController.class).delete(id)).withRel("delete"));
 	}
 
 	@PostMapping(value = "/refresh-tokens", produces = MediaType.APPLICATION_JSON_VALUE)
-	public EntityModel<ResultModel> save(@RequestBody String body) throws DemoException {
+	public EntityModel<ResultModel> create(@RequestBody String body, 
+			HttpServletResponse response) throws DemoException {
+		logger.info("body={}", body);
+		JSONObject jsonObject = new JSONObject(body);
+
+		if (!jsonObject.has("id")) {
+			throw new DemoException(HttpStatus.BAD_REQUEST, "The required parameter 'id' does not exist.");
+		}
+
+		if (!jsonObject.has("token")) {
+			throw new DemoException(HttpStatus.BAD_REQUEST, "The required parameter 'token' does not exist.");
+		}
+
+		String id = jsonObject.getString("id");
+		String value = jsonObject.getString("token");
+
+		String key = getKey(id);
+
+		String currentValue = redisService.get(key);
+		if (currentValue != null) {
+			throw new DemoException(HttpStatus.CONFLICT, "The key aleady exists.");
+		}
+		
+		redisService.set(key, value);
+		
+		ResultModel resultModel = new ResultModel(id, key, value);
+		
+		logger.info("resultModel={}", resultModel);
+
+		response.setStatus(HttpStatus.CREATED.value());
+		
+		return EntityModel.of(resultModel, 
+				WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(RedisController.class).create(body, response)).withSelfRel(),
+				WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(RedisController.class).read(id)).withRel("read"));
+	}
+
+	@PutMapping(value = "/refresh-tokens", produces = MediaType.APPLICATION_JSON_VALUE)
+	public EntityModel<ResultModel> update(@RequestBody String body) throws DemoException {
 		logger.info("body={}", body);
 		JSONObject jsonObject = new JSONObject(body);
 
@@ -74,6 +113,11 @@ public class RedisController {
 
 		String key = getKey(userId);
 
+		String currentValue = redisService.get(key);
+		if (currentValue == null) {
+			throw new DemoException(HttpStatus.NOT_FOUND, "The key does not exist.");
+		}
+		
 		redisService.set(key, value);
 		
 		ResultModel resultModel = new ResultModel(userId, key, value);
@@ -81,7 +125,7 @@ public class RedisController {
 		logger.info("resultModel={}", resultModel);
 
 		return EntityModel.of(resultModel, 
-				WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(RedisController.class).save(body)).withSelfRel(),
+				WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(RedisController.class).update(body)).withSelfRel(),
 				WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(RedisController.class).read(userId)).withRel("read"));
 	}
 
