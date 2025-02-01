@@ -29,7 +29,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 @RestController
 public class RedisController {
 
-	private Logger logger = LoggerFactory.getLogger(RedisController.class);
+	private final Logger logger = LoggerFactory.getLogger(RedisController.class);
 
 	@Autowired
 	private RedisService redisService;
